@@ -159,6 +159,14 @@ func CreateTeam(c *gin.Context) {
 		utils.InternalServerError(c, "user_update_failed")
 		return
 	}
+
+	// Initialize VPN network for the team (async to not slow down team creation)
+	go func() {
+		if _, err := utils.EnsureTeamVPN(team.ID); err != nil {
+			fmt.Printf("Warning: Failed to initialize VPN for team %d: %v\n", team.ID, err)
+		}
+	}()
+
 	utils.CreatedResponse(c, gin.H{"team": team})
 }
 

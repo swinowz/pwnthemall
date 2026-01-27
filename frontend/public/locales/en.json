@@ -1040,7 +1040,50 @@
     "source": "Source",
     "view_only": "Read only"
   },
-  "sidebar":{
-    "home":"Home"
+  "sidebar": {
+    "home": "Home"
+  },
+  "vpn": {
+    "title": "VPN",
+    "description": "Connect to the VPN to access challenge instances",
+    "management": "VPN",
+    "admin_description": "Manage WireGuard VPN configuration and peers",
+    "connection_status": "Connection Status",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "required_for_instances": "VPN connection is required to start challenge instances",
+    "server": "Server",
+    "your_ip": "Your IP",
+    "team_subnet": "Team Subnet",
+    "last_handshake": "Last Handshake",
+    "data_transferred": "Data",
+    "configuration": "Configuration",
+    "configuration_description": "Download your WireGuard configuration file",
+    "download_config": "Download Config",
+    "regenerate_keys": "Regenerate Keys",
+    "refresh_status": "Refresh Status",
+    "your_public_key": "Your Public Key",
+    "config_downloaded": "VPN configuration downloaded",
+    "regenerate_confirm": "Are you sure? This will invalidate your current VPN configuration.",
+    "keys_regenerated": "VPN keys regenerated successfully",
+    "setup_instructions": "Setup Instructions",
+    "install_wireguard": "Install WireGuard",
+    "save_config": "Save the configuration file",
+    "start_vpn": "Start the VPN",
+    "stop_vpn": "To disconnect",
+    "download_wireguard_windows": "Download WireGuard from",
+    "import_tunnel": "Open WireGuard and click 'Import tunnel(s) from file'",
+    "select_config": "Select the downloaded configuration file",
+    "click_activate": "Click 'Activate' to connect",
+    "install_wireguard_macos": "Install WireGuard from the App Store or",
+    "macos_gui": "If using the GUI app, import the configuration file",
+    "macos_cli": "If using CLI",
+    "install_app": "Install the WireGuard app from your app store",
+    "scan_qr": "Download the config file and import it, or use the QR code feature",
+    "disabled_title": "VPN Not Available",
+    "disabled_description": "VPN access is currently disabled. Contact an administrator for more information.",
+    "team_required_title": "Team Required",
+    "team_required_description": "You need to join or create a team before you can access the VPN.",
+    "vpn_required": "VPN connection required"
   }
 }

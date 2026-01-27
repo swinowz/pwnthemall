@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser, Bell, Flag, MessageSquare, FileText, Telescope, MessagesSquare } from "lucide-react";
+import { Home, Swords, LogIn, UserPlus, User, List, ShieldUser, Bell, Flag, MessageSquare, FileText, Telescope, MessagesSquare, Shield } from "lucide-react";
 import { useRouter } from "next/router";
 
 import { NavMain } from "@/components/nav-main";
@@ -141,6 +141,14 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         });
       }
 
+      // VPN access - show for all logged-in users
+      items.push({
+        title: t('vpn.title') || 'VPN',
+        url: "/vpn",
+        icon: Shield,
+        isActive: router.pathname === "/vpn",
+      });
+
       if (userData.role === "admin") {
         // Build admin sub-items dynamically
         const adminSubItems = [
@@ -161,7 +169,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: 'Challenges', url: "/admin/challenges" },
           { title: t('featured_challenges.featured_challenges_management'), url: "/admin/challenge-order" },
           { title: t('configuration'), url: "/admin/configuration" },
-          { title: 'Notifications', url: "/admin/notifications" }
+          { title: 'Notifications', url: "/admin/notifications" },
+          { title: t('vpn.management') || 'VPN', url: "/admin/vpn" }
         );
 
         items.push({
@@ -180,7 +189,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             router.pathname === "/admin/challenge-order" ||
             router.pathname === "/admin/configuration" ||
             router.pathname === "/admin/notifications" ||
-            router.pathname === "/admin/pages"
+            router.pathname === "/admin/pages" ||
+            router.pathname === "/admin/vpn"
         });
       }
     } else {

@@ -69,6 +69,10 @@ function load_compose_profiles() {
         profiles+=("plugins")
     fi
 
+    if [[ "${PTA_VPN_ENABLED:-false}" == "true" ]]; then
+        profiles+=("vpn")
+    fi
+
     export COMPOSE_PROFILES
     COMPOSE_PROFILES="$(IFS=','; echo "${profiles[*]}")"
 

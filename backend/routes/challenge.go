@@ -23,7 +23,7 @@ func RegisterChallengeRoutes(router *gin.Engine) {
 		challenges.POST("", middleware.CheckPolicy("/challenges", "write"), controllers.CreateChallenge)
 		challenges.POST("/:id/submit", middleware.RateLimit(10), middleware.CheckPolicy("/challenges/:id/submit", "write"), controllers.SubmitChallenge)
 		challenges.POST("/:id/build", middleware.DemoRestriction, middleware.CheckPolicy("/challenges/:id/build", "write"), controllers.BuildChallengeImage)
-		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
+		challenges.POST("/:id/start", middleware.DemoRestriction, middleware.VPNRequired(), middleware.CheckPolicy("/challenges/:id/start", "write"), controllers.StartChallengeInstance)
 		challenges.POST("/:id/stop", middleware.DemoRestriction, middleware.CheckPolicy("/challenges/:id/stop", "write"), controllers.StopChallengeInstance)
 
 		// Hint routes

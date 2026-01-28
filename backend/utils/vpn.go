@@ -6,8 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -418,9 +420,33 @@ func NotifyVPNAddTeamNetwork(teamID uint, subnet, gateway string) error {
 	return nil
 }
 
+// NotifyVPNConnectToNetwork notifies the VPN container to connect to a Docker network
+func NotifyVPNConnectToNetwork(networkName string) error {
+	req := map[string]string{
+		"networkName": networkName,
+	}
+
+	data, _ := json.Marshal(req)
+	resp, err := http.Post(getVPNContainerURL()+"/api/networks/connect", "application/json", bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("failed to contact VPN container: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("VPN container returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	debug.Log("VPN container connected to network: %s", networkName)
+	return nil
+}
+
 // GetVPNPeerStatus gets the real-time status of a VPN peer from the VPN container
 func GetVPNPeerStatus(publicKey string) (*models.VPNPeerStatus, error) {
-	resp, err := http.Get(getVPNContainerURL() + "/api/peers/" + publicKey + "/status")
+	// URL encode the public key as a query parameter to handle special characters like / + =
+	encodedKey := url.QueryEscape(publicKey)
+	resp, err := http.Get(getVPNContainerURL() + "/api/peer/status?publicKey=" + encodedKey)
 	if err != nil {
 		return nil, fmt.Errorf("failed to contact VPN container: %w", err)
 	}

@@ -7,6 +7,11 @@ import (
 )
 
 func RegisterVPNRoutes(router *gin.Engine) {
+	// Internal VPN routes (for WireGuard container to sync)
+	// These are on a separate path to avoid middleware conflicts
+	router.POST("/internal/vpn/sync-server-key", controllers.SyncVPNServerKey)
+	router.GET("/internal/vpn/peers", controllers.GetVPNPeers)
+
 	// Public VPN routes (authenticated users)
 	// Note: Caddy strips /api prefix, so routes are /vpn/...
 	vpn := router.Group("/vpn", middleware.AuthRequired(false), middleware.CSRFProtection())

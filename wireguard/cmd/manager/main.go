@@ -64,14 +64,13 @@ func main() {
 	// API routes
 	api := r.Group("/api")
 	{
-		// Peer management
-		api.POST("/peers", addPeer)
-		api.DELETE("/peers/:publicKey", removePeer)
-		api.GET("/peers", listPeers)
-		api.GET("/peers/:publicKey/status", getPeerStatus)
-
-		// Network management
+	// Peer management
+	api.POST("/peers", addPeer)
+	api.DELETE("/peers/:publicKey", removePeer)
+	api.GET("/peers", listPeers)
+	api.GET("/peer/status", getPeerStatus)		// Network management
 		api.POST("/networks", addNetwork)
+		api.POST("/networks/connect", connectToNetwork)
 		api.DELETE("/networks/:teamId", removeNetwork)
 
 		// Server info
@@ -257,7 +256,11 @@ func listPeers(c *gin.Context) {
 }
 
 func getPeerStatus(c *gin.Context) {
-	publicKeyStr := c.Param("publicKey")
+	publicKeyStr := c.Query("publicKey")
+	if publicKeyStr == "" {
+		c.JSON(400, gin.H{"error": "publicKey query parameter required"})
+		return
+	}
 
 	client, err := wgctrl.New()
 	if err != nil {
@@ -279,17 +282,19 @@ func getPeerStatus(c *gin.Context) {
 				allowedIPs[i] = ip.String()
 			}
 
-			var lastHandshake *time.Time
-			if !peer.LastHandshakeTime.IsZero() {
-				lastHandshake = &peer.LastHandshakeTime
-			}
+		var lastHandshake *time.Time
+		if !peer.LastHandshakeTime.IsZero() {
+			lastHandshake = &peer.LastHandshakeTime
+		}
 
-			connected := lastHandshake != nil && time.Since(*lastHandshake) < 3*time.Minute
+		// Consider connected if handshake within last 30 seconds
+		// WireGuard keepalive is typically 25s, so this gives a small buffer
+		connected := lastHandshake != nil && time.Since(*lastHandshake) < 30*time.Second
 
-			endpoint := ""
-			if peer.Endpoint != nil {
-				endpoint = peer.Endpoint.String()
-			}
+		endpoint := ""
+		if peer.Endpoint != nil {
+			endpoint = peer.Endpoint.String()
+		}
 
 			c.JSON(200, PeerStatus{
 				PublicKey:     peer.PublicKey.String(),
@@ -344,6 +349,56 @@ func addNetwork(c *gin.Context) {
 
 	log.Printf("Added network rules for team %d: VPN %s <-> Challenge %s", req.TeamID, req.Subnet, teamChallengeSubnet)
 	c.JSON(201, gin.H{"message": "network added"})
+}
+
+func connectToNetwork(c *gin.Context) {
+	var req struct {
+		NetworkName string `json:"networkName" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Connect to the Docker network using Docker socket
+	cmd := exec.Command("sh", "-c", fmt.Sprintf(`
+		NETWORK_ID=$(curl -sf --unix-socket /var/run/docker.sock http://localhost/networks 2>/dev/null | \
+			jq -r '.[] | select(.Name == "%s") | .Id' || echo "")
+		if [ -z "$NETWORK_ID" ]; then
+			echo "Network not found"
+			exit 1
+		fi
+		curl -sf --unix-socket /var/run/docker.sock \
+			-X POST \
+			-H "Content-Type: application/json" \
+			-d '{"Container":"wireguard","EndpointConfig":{}}' \
+			"http://localhost/networks/$NETWORK_ID/connect" 2>/dev/null
+	`, req.NetworkName))
+	
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Printf("Failed to connect to network %s: %v, output: %s", req.NetworkName, err, string(output))
+		c.JSON(500, gin.H{"error": "failed to connect to network", "details": string(output)})
+		return
+	}
+
+	// Wait a moment for the interface to be added
+	time.Sleep(500 * time.Millisecond)
+
+	// Add NAT rules for the new interface
+	cmd = exec.Command("sh", "-c", `
+		for iface in $(ip link show | grep -E "^[0-9]+: eth[1-9]" | awk -F': ' '{print $2}' | cut -d'@' -f1); do
+			iptables -t nat -C POSTROUTING -s 10.13.0.0/16 -o "$iface" -j MASQUERADE 2>/dev/null || \
+			iptables -t nat -I POSTROUTING 1 -s 10.13.0.0/16 -o "$iface" -j MASQUERADE 2>/dev/null
+		done
+	`)
+	
+	if err := cmd.Run(); err != nil {
+		log.Printf("Warning: Failed to add NAT rules: %v", err)
+	}
+
+	log.Printf("Connected to network: %s and added NAT rules", req.NetworkName)
+	c.JSON(200, gin.H{"message": "connected to network", "network": req.NetworkName})
 }
 
 func removeNetwork(c *gin.Context) {

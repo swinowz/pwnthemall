@@ -262,11 +262,14 @@ services:
       - WG_PORT=51820
       - WG_ADDRESS=${PTA_VPN_SERVER_ADDRESS:-10.13.0.1/16}
       - API_PORT=8080
-      - PTA_DOCKER_CHALL_BASE_CIDR=${PTA_DOCKER_CHALL_BASE_CIDR:-172.70.0.0/16}
+      - PTA_DOCKER_CHALL_BASE_CIDR=${PTA_DOCKER_CHALL_BASE_CIDR:-172.80.0.0/16}
+      - BACKEND_API_URL=http://backend:8080
+      - PTA_VPN_INTERNAL_SECRET=${PTA_VPN_INTERNAL_SECRET:-vpn-internal-secret}
     ports:
       - "${PTA_VPN_PORT:-51820}:51820/udp"
     volumes:
       - wireguard_config:/etc/wireguard
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       private:
     restart: unless-stopped

@@ -52,7 +52,6 @@ export default function VPNPage() {
   const [vpnStatus, setVpnStatus] = useState<VPNStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { loggedIn, authChecked } = useAuth();
@@ -110,24 +109,6 @@ export default function VPNPage() {
     }
   };
 
-  const handleRegenerateKeys = async () => {
-    if (!confirm(t("vpn.regenerate_confirm") || "Are you sure? This will invalidate your current VPN configuration.")) {
-      return;
-    }
-
-    setRegenerating(true);
-    try {
-      await axios.post("/api/vpn/regenerate");
-      toast.success(t("vpn.keys_regenerated") || "VPN keys regenerated successfully");
-      fetchVPNStatus();
-    } catch (err: any) {
-      const errorMsg = err.response?.data?.error || "Failed to regenerate keys";
-      toast.error(t(errorMsg) || errorMsg, { className: "bg-red-600 text-white" });
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -162,7 +143,7 @@ export default function VPNPage() {
             {t("vpn.title") || "VPN Access"}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {t("vpn.description") || "Connect to the VPN to access challenge instances"}
+            {t("description_label")}
           </p>
         </div>
 
@@ -280,14 +261,6 @@ export default function VPNPage() {
                       <Download className="mr-2 h-4 w-4" />
                     )}
                     {t("vpn.download_config") || "Download Config"}
-                  </Button>
-                  <Button variant="outline" onClick={handleRegenerateKeys} disabled={regenerating}>
-                    {regenerating ? (
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                    )}
-                    {t("vpn.regenerate_keys") || "Regenerate Keys"}
                   </Button>
                   <Button variant="outline" onClick={fetchVPNStatus}>
                     <RefreshCw className="mr-2 h-4 w-4" />

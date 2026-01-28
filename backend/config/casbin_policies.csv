@@ -50,8 +50,19 @@ p, member, /tickets/:id/close, write
 p, member, /tickets/upload, write
 p, member, /pages, read
 p, member, /pages/:slug, read
+p, member, /vpn/status, read
+p, member, /vpn/config, read
+p, member, /vpn/regenerate, write
 
 p, admin, /admin/submissions, read
+p, admin, /admin/vpn/config, read
+p, admin, /admin/vpn/config, write
+p, admin, /admin/vpn/regenerate-keys, write
+p, admin, /admin/vpn/peers, read
+p, admin, /admin/vpn/peers, write
+p, admin, /admin/vpn/teams, read
+p, admin, /admin/vpn/sync, write
+p, admin, /admin/vpn/stats, read
 p, admin, /admin/pages, read
 p, admin, /admin/pages, write
 p, admin, /admin/pages/:id, read

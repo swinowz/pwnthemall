@@ -71,6 +71,8 @@ services:
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM}
+      PTA_VPN_CONTAINER_URL: ${PTA_VPN_CONTAINER_URL:-http://wireguard:8080}
+      PTA_VPN_ENDPOINT: ${PTA_VPN_ENDPOINT:-${PTA_PUBLIC_DOMAIN}:${PTA_VPN_PORT:-51820}}
     volumes:
       - ./backend:/app
       - ./shared/docker-worker:/home/app/.ssh/docker-worker
@@ -242,9 +244,45 @@ services:
       - ./agent/config:/etc/agent:ro
     user: "1000:1000"
 
+  wireguard:
+    profiles:
+      - vpn
+    container_name: wireguard
+    build:
+      context: ./wireguard
+      dockerfile: Dockerfile
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    environment:
+      - WG_INTERFACE=wg0
+      - WG_PORT=51820
+      - WG_ADDRESS=${PTA_VPN_SERVER_ADDRESS:-10.13.0.1/16}
+      - API_PORT=8080
+      - PTA_DOCKER_CHALL_BASE_CIDR=${PTA_DOCKER_CHALL_BASE_CIDR:-172.80.0.0/16}
+      - BACKEND_API_URL=http://backend:8080
+      - PTA_VPN_INTERNAL_SECRET=${PTA_VPN_INTERNAL_SECRET:-vpn-internal-secret}
+    ports:
+      - "${PTA_VPN_PORT:-51820}:51820/udp"
+    volumes:
+      - wireguard_config:/etc/wireguard
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      private:
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wg", "show", "wg0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 volumes:
   postgres_data:
   minio:
+  wireguard_config:
 
 networks:
   public:
@@ -258,3 +296,9 @@ networks:
     ipam:
       config:
         - subnet: 172.70.2.0/24
+
+  vpn:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.13.0.0/16

@@ -17,6 +17,7 @@ type Instance struct {
 	ChallengeID uint          `gorm:"index;uniqueIndex:uniq_team_challenge" json:"challengeId"`
 	CreatedAt   time.Time     `json:"createdAt"`
 	Ports       pq.Int64Array `gorm:"type:integer[]" json:"ports"`
+	InternalIP  string        `json:"internalIp" gorm:"default:''"` // Container internal IP for VPN access
 	ExpiresAt   time.Time     `json:"expiresAt"`
 	Status      string        `json:"status" gorm:"default:'running'"` // running, stopped, expired
 }

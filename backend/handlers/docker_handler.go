@@ -180,11 +180,19 @@ func (h *dockerChallengeHandler) Start(c *gin.Context, challenge shared.Challeng
 	}
 
 	// Start container
-	containerName, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, hostPorts)
+	containerInfo, err := utils.StartDockerInstance(imageName, int(*user.TeamID), int(user.ID), internalPorts, hostPorts)
 	if err != nil {
 		debug.Log("Error starting Docker instance: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return err
+	}
+	
+	// Parse container name and internal IP
+	containerName := containerInfo
+	internalIP := ""
+	if parts := strings.Split(containerInfo, "|"); len(parts) == 2 {
+		containerName = parts[0]
+		internalIP = parts[1]
 	}
 
 	// Calculate expiration
@@ -207,6 +215,7 @@ func (h *dockerChallengeHandler) Start(c *gin.Context, challenge shared.Challeng
 		TeamID:      *user.TeamID,
 		ChallengeID: challenge.GetID(),
 		Ports:       ports64,
+		InternalIP:  internalIP,
 		CreatedAt:   time.Now(),
 		ExpiresAt:   expiresAt,
 		Status:      "running",
@@ -380,15 +389,22 @@ func (h *dockerChallengeHandler) buildConnectionInfo(challenge *models.Challenge
 		return connectionInfo
 	}
 
-	ip := os.Getenv("PTA_DOCKER_WORKER_IP")
+	// Use internal IP if available (for VPN access), otherwise fallback to worker IP (for port mapping)
+	ip := instance.InternalIP
 	if ip == "" {
-		ip = "instance-ip"
+		ip = os.Getenv("PTA_DOCKER_WORKER_IP")
+		if ip == "" {
+			ip = "instance-ip"
+		}
 	}
 
 	instancePorts := make([]int, len(instance.Ports))
 	for i, p := range instance.Ports {
 		instancePorts[i] = int(p)
 	}
+	
+	// If using internal IP, use challenge's original ports, not mapped host ports
+	useInternalPorts := instance.InternalIP != ""
 
 	for i, info := range challenge.ConnectionInfo {
 		formattedInfo := strings.ReplaceAll(info, "$ip", ip)
@@ -396,7 +412,13 @@ func (h *dockerChallengeHandler) buildConnectionInfo(challenge *models.Challenge
 			for j, originalPort := range challenge.Ports {
 				if j < len(instancePorts) {
 					originalPortStr := fmt.Sprintf("[%d]", originalPort)
-					newPortStr := fmt.Sprintf("%d", instancePorts[j])
+					// Use original port if accessing via internal IP, otherwise use mapped host port
+					var newPortStr string
+					if useInternalPorts {
+						newPortStr = fmt.Sprintf("%d", originalPort)
+					} else {
+						newPortStr = fmt.Sprintf("%d", instancePorts[j])
+					}
 					formattedInfo = strings.ReplaceAll(formattedInfo, originalPortStr, newPortStr)
 				}
 			}

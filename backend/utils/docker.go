@@ -283,6 +283,22 @@ func StartDockerInstance(image string, teamId int, userId int, internalPorts []i
 		"Started container %s for team %d user %d on host ports %v mapping to internal %v",
 		containerName, teamId, userId, hostPorts, internalPorts,
 	)
+	
+	// Get container's internal IP address
+	inspect, err := config.DockerClient.ContainerInspect(ctx, resp.ID)
+	if err != nil {
+		debug.Log("Failed to inspect container for IP: %v", err)
+		return containerName, nil // Don't fail if we can't get IP
+	}
+	
+	// Store IP in container name return format: "name|ip"
+	for _, network := range inspect.NetworkSettings.Networks {
+		if network.IPAddress != "" {
+			debug.Log("Container %s has internal IP: %s", containerName, network.IPAddress)
+			return fmt.Sprintf("%s|%s", containerName, network.IPAddress), nil
+		}
+	}
+	
 	return containerName, nil
 }
 
@@ -358,6 +374,12 @@ func EnsureTeamNetworkExists(teamId int) (string, error) {
 		debug.Log(err.Error())
 		return "", fmt.Errorf("docker_network_unavailable")
 	}
+	
+	// Notify VPN container to connect to this network
+	if err := NotifyVPNConnectToNetwork(networkName); err != nil {
+		debug.Log("Warning: Failed to notify VPN container about new network: %v", err)
+	}
+	
 	return networkName, nil
 }
 

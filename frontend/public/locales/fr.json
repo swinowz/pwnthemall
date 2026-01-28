@@ -1040,7 +1040,50 @@
     "source": "Source",
     "view_only": "Lecture seule"
   },
-  "sidebar":{
-    "home":"Accueil"
+  "sidebar": {
+    "home": "Accueil"
+  },
+  "vpn": {
+    "title": "VPN",
+    "description": "Connectez-vous au VPN pour accéder aux instances de challenge",
+    "management": "VPN",
+    "admin_description": "Gérer la configuration et les pairs WireGuard VPN",
+    "connection_status": "État de la connexion",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "required_for_instances": "La connexion VPN est requise pour démarrer les instances de challenge",
+    "server": "Serveur",
+    "your_ip": "Votre IP",
+    "team_subnet": "Sous-réseau équipe",
+    "last_handshake": "Dernière poignée de main",
+    "data_transferred": "Données",
+    "configuration": "Configuration",
+    "configuration_description": "Téléchargez votre fichier de configuration WireGuard",
+    "download_config": "Télécharger la config",
+    "regenerate_keys": "Régénérer les clés",
+    "refresh_status": "Actualiser le statut",
+    "your_public_key": "Votre clé publique",
+    "config_downloaded": "Configuration VPN téléchargée",
+    "regenerate_confirm": "Êtes-vous sûr ? Cela invalidera votre configuration VPN actuelle.",
+    "keys_regenerated": "Clés VPN régénérées avec succès",
+    "setup_instructions": "Instructions d'installation",
+    "install_wireguard": "Installer WireGuard",
+    "save_config": "Enregistrer le fichier de configuration",
+    "start_vpn": "Démarrer le VPN",
+    "stop_vpn": "Pour se déconnecter",
+    "download_wireguard_windows": "Télécharger WireGuard depuis",
+    "import_tunnel": "Ouvrez WireGuard et cliquez sur 'Importer tunnel(s) depuis un fichier'",
+    "select_config": "Sélectionnez le fichier de configuration téléchargé",
+    "click_activate": "Cliquez sur 'Activer' pour vous connecter",
+    "install_wireguard_macos": "Installez WireGuard depuis l'App Store ou",
+    "macos_gui": "Si vous utilisez l'application GUI, importez le fichier de configuration",
+    "macos_cli": "Si vous utilisez CLI",
+    "install_app": "Installez l'application WireGuard depuis votre app store",
+    "scan_qr": "Téléchargez le fichier de config et importez-le, ou utilisez la fonction QR code",
+    "disabled_title": "VPN non disponible",
+    "disabled_description": "L'accès VPN est actuellement désactivé. Contactez un administrateur pour plus d'informations.",
+    "team_required_title": "Équipe requise",
+    "team_required_description": "Vous devez rejoindre ou créer une équipe avant de pouvoir accéder au VPN.",
+    "vpn_required": "Connexion VPN requise"
   }
 }
